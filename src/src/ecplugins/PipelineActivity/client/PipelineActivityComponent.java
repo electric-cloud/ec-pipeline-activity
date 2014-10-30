@@ -482,6 +482,7 @@ public class PipelineActivityComponent extends ComponentBase
                 m_workflows = response;
                 ListIterator<Workflow> iterator = response.getWorkflows()
                         .listIterator();
+                Integer i = 1;
                 while (iterator.hasNext()) {
                     Workflow workflow = iterator.next();
                     Map<String, Boolean> visitedStates = getVisitedStates(workflow);
@@ -846,32 +847,17 @@ public class PipelineActivityComponent extends ComponentBase
      * For a single workflow, get all the property values that need to be
      * charted and add them to the appropriate series.
      */
-    private void getChartValues(final Workflow workflow)
+    private void getChartValues(final Workflow workflow, Integer i)
     {
         Iterator<String> iterator = m_chartProperties.keySet().iterator();
         Map<String, Property> selects =
                 m_workflows.getSelects(workflow.getObjectId());
 
-        // If a key was specified in the URL, check to see if the values are
-        // numeric.  If they are, use those as the x-axis.  Otherwise, use the
-        // workflow ID.
-        Long xAxis = workflow.getId();
-        if (m_keyLabel != null) {
-            try {
-                String selected = getSelectedProperty(selects, m_keyProperty);
-                if (selected != null && !selected.isEmpty()) {
-                    xAxis = Long.parseLong(selected);
-                }
-            } catch (NumberFormatException e) {
-                xAxis = workflow.getId();
-            }
-        }
-
         while (iterator.hasNext()) {
             String property = iterator.next();
             String value = getSelectedProperty(selects, property);
             if (value != null) {
-                m_chartProperties.get(property).add(new DataPoint(xAxis,
+                m_chartProperties.get(property).add(new DataPoint(i,
                         Double.parseDouble(value)));
             }
         }
