@@ -1,14 +1,14 @@
 OVERVIEW:
 
-This dashboard provides a pipeline view of workflow instances.
+The "PipelineActivity" ElectricCommander/ElectricFlow plugin provides a pipeline dashboard to view workflow instances.
 
-USAGE INSTRUCTIONS:
+USAGE:
 
-Install and promote the plugin (available in out/EC-PipelineActivity.jar), then use the following URL:
+You must first install and promote the plugin (available in out/EC-PipelineActivity.jar). You can then use the following URL to access the dashboard:
 
 https://SERVER/commander/pages/EC-PipelineActivity/activity?projectName=PROJECT&workflowDefinitionName=WORKFLOWDEFINITION
 
-As needed, add URL GET parameters similar to the following examples:
+Add URL GET parameters similar to the following examples:
 * filter_version=1.0.0 -- only show workflows where the property "version" equals "1.0.0". Add as many of these as you like. You can match built-in or custom properties as long as they are top-level properties of the workflows.
 * key_Revision=revision -- rename the first column from "Name" to "Revision". The clickable link will be based on the value of the property "revision" instead of the workflow name. You can only set this parameter once. You can match a built-in or a custom property as long as it is a top-level property of the workflows.
 
