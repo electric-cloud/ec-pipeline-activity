@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin>
+    <key>@PLUGIN_KEY@</key>
+    <version>@PLUGIN_VERSION@</version>
+    <label>@PLUGIN_KEY@</label>
+    <description>Provides a dashboard to monitor activity for pipeline-style workflows.</description>
+    <help>help.xml</help>
+    <author>Tanay Nagjee</author>
+    <authorUrl>mailto:tanay@electric-cloud.com</authorUrl>
+    <commander-version min="4.2"/>
+    <category>Utility</category>
+    <components>
+        <component name="PipelineActivityComponent">
+            <javascript>war/ecplugins.PipelineActivity.PipelineActivityComponent/ecplugins.PipelineActivity.PipelineActivityComponent.nocache.js</javascript>
+        </component>
+    </components>
+</plugin>

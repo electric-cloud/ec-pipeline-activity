@@ -1,0 +1,11 @@
+<project name="PipelineActivity" default="package" basedir=".">
+  <description>Build the PipelineActivity plugin</description>
+  <property name="pluginKey" value="PipelineActivity" />
+  <property name="pluginVersion" value="2.0.0" />
+  <property name="gwtModules" value="ecplugins.PipelineActivity.PipelineActivityComponent" />
+  <path id="extras">
+    <pathelement location="${SDKROOT}/lib/gflot-2.4.0.jar"/>
+  </path>
+  <property name="gwt.path.extras" value="extras" />
+  <import file="${SDKROOT}/build/buildTargets.xml" />
+</project>
