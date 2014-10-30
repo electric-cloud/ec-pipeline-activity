@@ -487,7 +487,8 @@ public class PipelineActivityComponent extends ComponentBase
                     Map<String, Boolean> visitedStates = getVisitedStates(workflow);
                     getStates(workflow, visitedStates);
                     if (m_chartProperties.size() > 0) {
-                        getChartValues(workflow);
+                        getChartValues(workflow, i);
+                        i++;
                     }
                 }
                 // Now that we've worked through all the workflows, add the
