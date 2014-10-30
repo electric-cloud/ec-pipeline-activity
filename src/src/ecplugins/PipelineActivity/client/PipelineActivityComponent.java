@@ -124,9 +124,6 @@ public class PipelineActivityComponent extends ComponentBase
     private Map<String, Job> m_subJobMap
             = new HashMap<String, Job> ();
 
-    // The label of the first column; defaults to Name if not specified in GET.
-    private String m_keyLabel;
-
     // The property from which to retrieve the value of the first column;
     // defaults to workflowName if not 
     private String m_keyProperty;
@@ -211,7 +208,7 @@ public class PipelineActivityComponent extends ComponentBase
     }
 
     /**
-     * Look for "key_" and "filter_" GET parameters and store them for the
+     * Look for "key" and "filter_" GET parameters and store them for the
      * workflows query to add accordingly.
      * 
      * Create the activity panel after adding the filters to the title.
@@ -226,9 +223,8 @@ public class PipelineActivityComponent extends ComponentBase
             String name = stringListEntry.getKey();
             List<String> values = stringListEntry.getValue();
             String value  = values.isEmpty() ? "" : values.get(0);
-            if (name.startsWith("key_")) {
-                // We only support one "key_" parameter, so the last one wins.
-                m_keyLabel = name.substring(4);
+            if (name.equals("key")) {
+                // Last one wins.
                 m_keyProperty = value;
             }
             if (name.startsWith("filter_")) {
@@ -296,8 +292,7 @@ public class PipelineActivityComponent extends ComponentBase
                 // know which states are going to be included.
                 PipelineActivityStyles css = RESOURCES.css();
 
-                m_activity.setWidget(0, 0, m_keyLabel == null ?
-                        null : new Label(m_keyLabel));
+                m_activity.setWidget(0, 0, null);
                 m_formatter.setStylePrimaryName(0, 0,
                         css.activityTableHeader());
 
@@ -743,7 +738,7 @@ public class PipelineActivityComponent extends ComponentBase
         // as a GET parameter in the URL, get the selected property value for
         // that key and display it.  Otherwise, default to the workflow name.
         String key = null;
-        if (m_keyLabel != null) {
+        if (m_keyProperty != null) {
             Map<String, Property> selects =
                     m_workflows.getSelects(workflow.getObjectId());
             String selected = getSelectedProperty(selects, m_keyProperty);
@@ -809,7 +804,7 @@ public class PipelineActivityComponent extends ComponentBase
         m_formatter.setStylePrimaryName(row, 1, style);
 
         // Finally, create the actions for this workflow.  This is basically the
-        // standard actions along with any available manual transitions.
+        // standard view action along with any available manual transitions.
         FlexTable actions = new FlexTable();
         formatter = actions.getFlexCellFormatter();
         col = 0;
