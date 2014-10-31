@@ -23,7 +23,7 @@ To add charts on the right, create a property sheet on the workflow definition c
 
 SOURCES:
 
-The sources are available in the src directory. They were built using the Commander SDK v2.0. The documentation for the SDK is available at http://docs.electric-cloud.com.
+The sources are available in the src directory. They were built using the Commander SDK v5.0. The documentation for the SDK is available at http://docs.electric-cloud.com.
 
 AUTHOR:
 
