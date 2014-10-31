@@ -4,7 +4,7 @@ The "PipelineActivity" ElectricCommander/ElectricFlow plugin provides a pipeline
 
 USAGE:
 
-You must first install and promote the plugin (available in out/EC-PipelineActivity.jar). You can then use the following URL to access the dashboard:
+You must first install and promote the plugin (available in out/PipelineActivity.jar). You can then use the following URL to access the dashboard:
 
 https://SERVER/commander/pages/EC-PipelineActivity/activity?projectName=PROJECT&workflowDefinitionName=WORKFLOWDEFINITION
 
@@ -30,6 +30,6 @@ AUTHOR:
 Tanay Nagjee, Electric Cloud Solutions Engineer
 tanay@electric-cloud.com
 
-LEGAL:
+DISCLAIMER:
 
-This module is not officially supported by Electric Cloud. It has undergone no  formal testing and you may run into issues that have not been uncovered in the limited manual testing done so far. Electric Cloud should not be held liable for any repercussions of using this software.
+This module is not officially supported by Electric Cloud.
