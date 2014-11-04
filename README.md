@@ -6,7 +6,7 @@ USAGE:
 
 You must first install and promote the plugin (available in out/PipelineActivity.jar). You can then use the following URL to access the dashboard:
 
-https://SERVER/commander/pages/EC-PipelineActivity/activity?projectName=PROJECT&workflowDefinitionName=WORKFLOWDEFINITION
+https://SERVER/commander/pages/PipelineActivity/activity?projectName=PROJECT&workflowDefinitionName=WORKFLOWDEFINITION
 
 Add URL GET parameters similar to the following examples:
 * filter_version=1.0.0 -- only show workflows where the property "version" equals "1.0.0". Add as many of these as you like. You can match built-in or custom properties as long as they are top-level properties of the workflows.
