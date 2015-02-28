@@ -28,14 +28,23 @@ public interface PipelineActivityStyles
     String pipelineNoJob();
     String pipelineNoJobVisited();
     String pipelineSuccess();
+    String pipelineSuccessManual();
+    String pipelineSuccessManualActive();
     String pipelineWarning();
     String pipelineError();
+    String pipelineErrorManual();
+    String pipelineErrorManualActive();
     String pipelineNoJobVisitedActive();
     String pipelineSuccessActive();
     String pipelineWarningActive();
     String pipelineErrorActive();
     String pipelineArrow();
+    String pipelineArrowManual();
+    String stagesTable();
+	String viewLink();
     String actionsSeparator();
+	String actionsLink();
     String chartsPanel();
     String chartsTitle();
+    String summaryText();
 }

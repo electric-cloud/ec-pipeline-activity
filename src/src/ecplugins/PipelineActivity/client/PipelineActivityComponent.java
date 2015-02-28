@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,13 +34,14 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.regexp.shared.MatchResult;
-
 import com.electriccloud.commander.client.ChainedCallback;
 import com.electriccloud.commander.client.domain.ErrorCode;
 import com.electriccloud.commander.client.domain.Job;
 import com.electriccloud.commander.client.domain.JobOutcome;
+import com.electriccloud.commander.client.domain.JobStatus;
 import com.electriccloud.commander.client.domain.LogEntry;
 import com.electriccloud.commander.client.domain.ObjectType;
 import com.electriccloud.commander.client.domain.Order;
@@ -123,7 +125,7 @@ public class PipelineActivityComponent extends ComponentBase
     // - Value: Job object
     private Map<String, Job> m_subJobMap
             = new HashMap<String, Job> ();
-
+    
     // The property from which to retrieve the value of the first column;
     // defaults to workflowName if not 
     private String m_keyProperty;
@@ -147,6 +149,9 @@ public class PipelineActivityComponent extends ComponentBase
     // The name of the property on a state definition which determines whether
     // the corresponding states show up in the activity table.
     private static final String SHOW = "pipeline_activity_show";
+
+    // The maximum number of recent pipelines to show.
+    private static final Integer MAX = 10;
 
     // The name of the property sheet on a workflow definition which defines
     // chart properties and colors.
@@ -298,6 +303,13 @@ public class PipelineActivityComponent extends ComponentBase
 
                 // Create a table for the state names.
                 FlexTable pipeline = new FlexTable();
+                
+                // Set the width and height so it does not scale down when the
+                // browser window is small or resized.
+                pipeline.setStyleName(css.stagesTable());
+                Integer width = (114 * selectedStates.size()) - 14;
+                pipeline.setSize(width.toString() + "px", "22px");
+
                 FlexCellFormatter formatter = pipeline.getFlexCellFormatter();
                 int col = 0;
                 for (String stateToShow : m_statesToShow)
@@ -310,6 +322,7 @@ public class PipelineActivityComponent extends ComponentBase
                     if (m_statesToShow.indexOf(stateToShow) <
                             m_statesToShow.size() - 1) {
                         pipeline.setWidget(0, col, null);
+                        
                         formatter.setStylePrimaryName(0, col,
                                 css.pipelineArrow());
                         col++;
@@ -458,7 +471,7 @@ public class PipelineActivityComponent extends ComponentBase
             workflowsRequest.addFilter(new FindObjectsFilter.EqualsFilter(
                     filter, m_workflowFilters.get(filter)));
         }
-        workflowsRequest.setMaxIds(20);
+        workflowsRequest.setMaxIds(MAX);
 
         workflowsRequest.setCallback(new FindObjectsResponseCallback() {
             @Override
@@ -480,7 +493,7 @@ public class PipelineActivityComponent extends ComponentBase
                 Integer i = 1;
                 while (iterator.hasNext()) {
                     Workflow workflow = iterator.next();
-                    Map<String, Boolean> visitedStates = getVisitedStates(workflow);
+                    Map<String, String> visitedStates = processWorkflowLog(workflow);
                     getStates(workflow, visitedStates);
                     if (m_chartProperties.size() > 0) {
                         getChartValues(workflow, i);
@@ -505,10 +518,10 @@ public class PipelineActivityComponent extends ComponentBase
      *
      * @param workflow -- The workflow whose log entries are being retrieved.
      */
-    private Map<String, Boolean> getVisitedStates(final Workflow workflow)
+    private Map<String, String> processWorkflowLog(final Workflow workflow)
     {
-        final Map<String, Boolean> visitedStates = new HashMap<String, Boolean>();
-        visitedStates.put(workflow.getStartingState(), true);
+        final Map<String, String> visitedStates = new HashMap<String, String>();
+        visitedStates.put(workflow.getStartingState(), null);
         FindObjectsRequest logEntriesRequest = getRequestManager()
                 .getRequestFactory()
                 .createFindObjectsRequest(ObjectType.logEntry);
@@ -543,7 +556,27 @@ public class PipelineActivityComponent extends ComponentBase
 					MatchResult matcher = regExp.exec(message);
 					if (matcher != null) {
 						String visitedState = matcher.getGroup(1);
-						visitedStates.put(visitedState, true);
+						visitedStates.put(visitedState, null);
+					}
+					
+					// Figure out if a user took a manual transition out of a
+					// state and record that.
+					regExp = RegExp.compile(
+							"User '(.*)' is taking manual transition '(.*)' "
+							+ "from state '(.*)' to state");
+					matcher = regExp.exec(message);
+					if (matcher != null) {
+						String user = matcher.getGroup(1);
+						String transition = matcher.getGroup(2).toLowerCase();
+						String fromState = matcher.getGroup(3);
+						if (transition.startsWith("approve")) {
+							visitedStates.put(fromState, "Approved: " + user);
+						} else if (transition.startsWith("reject")) {
+							visitedStates.put(fromState, "Rejected: " + user);
+						} else {
+							visitedStates.put(fromState,
+									"Transitioned: " + user);
+						}
 					}
                 }
             }
@@ -568,7 +601,7 @@ public class PipelineActivityComponent extends ComponentBase
      * @param workflow -- The workflow whose states are being retrieved.
      */
     private void getStates(final Workflow workflow,
-            final Map<String, Boolean> visitedStates)
+            final Map<String, String> visitedStates)
     {
         final String workflowName = workflow.getName();
 
@@ -643,7 +676,7 @@ public class PipelineActivityComponent extends ComponentBase
             Workflow workflow,
             State state)
     {
-        String stateName = state.getName();
+        final String stateName = state.getName();
         final String workflowName = state.getWorkflowName();
         final String mapIndex = workflowName + "/" + stateName;
 
@@ -708,7 +741,7 @@ public class PipelineActivityComponent extends ComponentBase
                  */
                 @Override
                 public void handleResponse(@Nullable Job response) {
-                    m_subJobMap.put(mapIndex, response);
+                    m_subJobMap.put(mapIndex, response);                    
                 }
             });
             requests.add(jobRequest);
@@ -725,7 +758,7 @@ public class PipelineActivityComponent extends ComponentBase
      *                       table.
      */
     private void processWorkflow(Workflow workflow,
-            Map<String, Boolean> visitedStates)
+            Map<String, String> visitedStates)
     {
         String workflowName = workflow.getName();
         String activeState = workflow.getActiveState();
@@ -753,7 +786,21 @@ public class PipelineActivityComponent extends ComponentBase
         nameLink.setHref(createWorkflowLink(workflow));
         nameLink.setTarget("_blank");
         nameLink.setText(key);
-        m_activity.setWidget(row, 0, nameLink);
+        FlexTable label = new FlexTable();
+        label.setWidget(0, 0, nameLink);
+
+        // Extract the launch date and time, and display that along with the
+        // user that launched the pipeline.
+		RegExp regExp = RegExp.compile("(.*)T(.*)\\.\\d\\d\\dZ");
+		MatchResult matcher = regExp.exec(workflow.getStart());
+		String date = matcher.getGroup(1);
+		String time= matcher.getGroup(2);
+		Label summary = new Label(workflow.getOwner() + " | " + date
+				+ " | " + time);
+        summary.setStyleName(css.summaryText());
+        label.setWidget(1, 0, summary);
+
+        m_activity.setWidget(row, 0, label);
         m_formatter.setStylePrimaryName(row, 0, style);
 
         // Go through each state and graphically display the current subjob
@@ -766,6 +813,7 @@ public class PipelineActivityComponent extends ComponentBase
         {
             Boolean active = stateName.equals(activeState);
             pipeline.setWidget(0, col, null);
+            pipeline.setWidget(1, col, null);
             String mapIndex = workflowName + "/" + stateName;
             String backgroundStyle;
             if (m_subJobMap.containsKey(mapIndex)) {
@@ -784,9 +832,48 @@ public class PipelineActivityComponent extends ComponentBase
                     backgroundStyle = active ?
                         css.pipelineErrorActive() : css.pipelineError();
                 }
+
+                // Explicitly say "RUNNING" if this state is currently running
+                // a job.
+                if (job.getStatus().equals(JobStatus.running)) {
+                    pipeline.setWidget(0, col, new Label("RUNNING"));
+                }
+
+                // Add the duration for every state that calls a job.
+        		Label jobSummary = new Label("Duration: "
+        				+ formatMilliseconds(job.getElapsedTime()));
+        		jobSummary.setStyleName(css.summaryText());
+                pipeline.setWidget(1, col, jobSummary);
             } else if (visitedStates.containsKey(stateName)) {
                 backgroundStyle = active ?
-                    css.pipelineNoJobVisitedActive() : css.pipelineNoJobVisited();
+                    css.pipelineNoJobVisitedActive() :
+                    	css.pipelineNoJobVisited();
+
+                // Explicitly say "WAITING" if this state is active and waiting
+                // for manual transitions.
+                if (active && !workflow.isCompleted()) {
+                	pipeline.setWidget(0, col, new Label("WAITING"));
+                }
+                
+                // If this state has been visited, check to see if we found a
+                // user who transitioned out of it, and if so, display that
+                // info.  Special case approvals/rejections by making those
+                // states green/red.
+                if (visitedStates.get(stateName) != null) {
+                	String manualText = visitedStates.get(stateName);
+                    if (manualText.startsWith("Approved:")) {
+                        backgroundStyle = active ?
+                            css.pipelineSuccessManualActive() :
+                            	css.pipelineSuccessManual();
+                    } else if (manualText.startsWith("Rejected:")) {
+                        backgroundStyle = active ?
+                            css.pipelineErrorManualActive() :
+                            	css.pipelineErrorManual();
+                    }
+            		Label manual = new Label(manualText);
+            		manual.setStyleName(css.summaryText());
+                    pipeline.setWidget(1, col, manual);
+                }
             } else {
                 backgroundStyle = css.pipelineNoJob();
             }
@@ -796,6 +883,7 @@ public class PipelineActivityComponent extends ComponentBase
             // Show an arrow unless it's the final state.
             if (m_statesToShow.indexOf(stateName) < m_statesToShow.size() - 1) {
                 pipeline.setWidget(0, col, null);
+                pipeline.setWidget(1, col, null);
                 formatter.setStylePrimaryName(0, col, css.pipelineArrow());
                 col++;
             }
@@ -806,32 +894,38 @@ public class PipelineActivityComponent extends ComponentBase
         // Finally, create the actions for this workflow.  This is basically the
         // standard view action along with any available manual transitions.
         FlexTable actions = new FlexTable();
-        formatter = actions.getFlexCellFormatter();
-        col = 0;
+        actions.getElement().setAttribute("align", "right");
         Anchor viewLink = new Anchor();
         viewLink.setHref(createWorkflowLink(workflow));
         viewLink.setTarget("_blank");
-        viewLink.setText("View");
-        actions.setWidget(0, col, viewLink);
-        col++;
+        viewLink.setText("View Pipeline");
+        viewLink.setStyleName(css.viewLink());
+        actions.setWidget(0, 0, viewLink);
         if (m_manualTransitionMap.containsKey(workflowName)) {
+            FlexTable manualActions = new FlexTable();
+            formatter = manualActions.getFlexCellFormatter();
             ListIterator<Transition> iterator = m_manualTransitionMap
                     .get(workflowName)
                     .listIterator();
+            col = 0;
             while (iterator.hasNext()) {
-                actions.setWidget(0, col, new Label("|"));
-                formatter.setStylePrimaryName(0, col,
-                        css.actionsSeparator());
-                col++;
+            	if (col > 0) {
+            		manualActions.setWidget(0, col, new Label("|"));
+	                formatter.setStylePrimaryName(0, col,
+	                        css.actionsSeparator());
+	                col++;
+            	}
 
                 Transition transition = iterator.next();
                 Anchor transitionLink = new Anchor();
                 transitionLink.setHref(createTransitionLink(transition));
                 transitionLink.setTarget("_blank");
                 transitionLink.setText(transition.getName());
-                actions.setWidget(0, col, transitionLink);
+                transitionLink.setStyleName(css.actionsLink());
+                manualActions.setWidget(0, col, transitionLink);
                 col++;
             }
+            actions.setWidget(1, 0, manualActions);
         }
         m_activity.setWidget(row, 2, actions);
         m_formatter.setStylePrimaryName(row, 2, even ?
@@ -902,4 +996,19 @@ public class PipelineActivityComponent extends ComponentBase
                 "transitions",  transition.getName())
                 .buildString() + "?s=Workflows";
     }
+
+	private String formatMilliseconds(Long millis) {
+		String hours = NumberFormat.getFormat("00").format(
+				TimeUnit.MILLISECONDS.toHours(millis));
+		String minutes = NumberFormat.getFormat("00").format(
+				TimeUnit.MILLISECONDS.toMinutes(millis) -  
+				TimeUnit.HOURS.toMinutes(
+						TimeUnit.MILLISECONDS.toHours(millis)));
+		String seconds = NumberFormat.getFormat("00").format(
+				TimeUnit.MILLISECONDS.toSeconds(millis) - 
+				TimeUnit.MINUTES.toSeconds(
+						TimeUnit.MILLISECONDS.toMinutes(millis)));
+		String summaryText = hours + ":" + minutes + ":" + seconds;
+		return summaryText;
+	}
 }

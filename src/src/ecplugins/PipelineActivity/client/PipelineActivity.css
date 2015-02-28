@@ -2,6 +2,10 @@ table.activityTable {
     width: 100%;
 }
 
+table.stagesTable {
+    table-layout: fixed;
+}
+
 table.activityTable td.activityTableHeader,
 table.activityTable td.activityTableHeaderLast,
 table.activityTable td.activityTableEven,
@@ -43,17 +47,27 @@ table.activityTable td.pipelineHeader {
     text-align: center;
 }
 
+table.activityTable td.pipelineArrowManual,
 table.activityTable td.pipelineArrow {
     width: 14px;
     text-align: center;
-    background-image: url(/commander/lib/images/icn_chevron.gif);
     background-position: center;
     background-repeat: no-repeat;
+}
+
+table.activityTable td.pipelineArrow {
+    background-image: url(/commander/lib/images/icn_chevron.gif);
+}
+
+table.activityTable td.pipelineArrowManual {
+    background-image: url(/commander/lib/images/icn_chevron_over.gif);
 }
 
 table.activityTable td.pipelineHeader,
 table.activityTable td.pipelineNoJob,
 table.activityTable td.pipelineNoJobVisited,
+table.activityTable td.pipelineSuccessManual,
+table.activityTable td.pipelineErrorManual,
 table.activityTable td.pipelineSuccess,
 table.activityTable td.pipelineWarning,
 table.activityTable td.pipelineError {
@@ -64,11 +78,16 @@ table.activityTable td.pipelineError {
 
 table.activityTable td.pipelineNoJobVisitedActive,
 table.activityTable td.pipelineSuccessActive,
+table.activityTable td.pipelineSuccessManualActive,
 table.activityTable td.pipelineWarningActive,
-table.activityTable td.pipelineErrorActive {
+table.activityTable td.pipelineErrorActive,
+table.activityTable td.pipelineErrorManualActive {
     padding: 0px;
     width: 98px;
     height: 16px;
+    text-align: center;
+    font-size: 80%;
+    font-weight: bold;
 }
 
 table.activityTable td.pipelineSuccess:hover,
@@ -82,8 +101,10 @@ table.activityTable td.pipelineErrorActive:hover {
 
 table.activityTable td.pipelineNoJobVisitedActive,
 table.activityTable td.pipelineSuccessActive,
+table.activityTable td.pipelineSuccessManualActive,
 table.activityTable td.pipelineWarningActive,
-table.activityTable td.pipelineErrorActive {
+table.activityTable td.pipelineErrorActive,
+table.activityTable td.pipelineErrorManualActive {
     border: 1px solid #333333;
 }
 
@@ -99,11 +120,13 @@ table.activityTable td.pipelineNoJobVisitedActive {
     background: #99D6FF;
 }
 
+table.activityTable td.pipelineSuccessManual,
 table.activityTable td.pipelineSuccess {
     background: #00CC00;
 }
 
-table.activityTable td.pipelineSuccessActive {
+table.activityTable td.pipelineSuccessActive,
+table.activityTable td.pipelineSuccessManualActive {
     background: #99EB99;
 }
 
@@ -115,16 +138,34 @@ table.activityTable td.pipelineWarningActive {
     background: #FFFF66;
 }
 
+table.activityTable td.pipelineErrorManual,
 table.activityTable td.pipelineError {
     background: #FF0000;
 }
 
-table.activityTable td.pipelineErrorActive {
+table.activityTable td.pipelineErrorActive,
+table.activityTable td.pipelineErrorManualActive {
     background: #FF8080;
 }
 
 table.activityTable td.actionsSeparator {
     padding: 0px 6px 3px 6px;
+    font-size: 80%;
+}
+
+.viewLink {
+    white-space: nowrap;
+    text-align: right;
+}
+
+.actionsLink {
+    font-size: 80%;
+    white-space: nowrap;
+}
+
+div.summaryText {
+    font-size: 80%;
+    white-space: nowrap;
 }
 
 .chartsPanel {
